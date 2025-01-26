@@ -18,24 +18,21 @@ const ChatContainer = () => {
   const { authUser } = useAuthStore();
   const messageEndRef = useRef(null);
 
-   // Get messages and subscribe/unsubscribe to real-time messages when selectedUser changes
+
   useEffect(() => {
-    if (selectedUser && selectedUser._id) {
-      getMessages(selectedUser._id);
-      subscribeToMessages();
-      
-      // Cleanup on component unmount or when selectedUser changes
-      return () =>  unsubcribeFromMessages();
-    }
-  }, [selectedUser, getMessages, subscribeToMessages, unsubcribeFromMessages]
-  );
- 
-  // Scroll to the bottom when messages change
+   
+    getMessages(selectedUser._id);
+
+    subscribeToMessages();
+
+    return () => unsubcribeFromMessages();
+  }, [selectedUser._id, getMessages, subscribeToMessages, unsubcribeFromMessages]);
+
   useEffect(() => {
-    if (messageEndRef.current) {
+    if (messageEndRef.current && messages) {
       messageEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]); 
+  }, [messages]);
 
   if (isMessagesLoading) {
     return (
@@ -52,11 +49,18 @@ const ChatContainer = () => {
       <ChatHeader />
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages && messages.length > 0 ? (
-          messages.map((message) => (
+        {messages &&
+          messages.filter(
+            (message) =>
+              (message.senderId === authUser._id && message.receiverId === selectedUser._id) || // Sent by the current user to the selected user
+              (message.senderId === selectedUser._id && message.receiverId === authUser._id)    // Received from the selected user
+          )
+          .map((message) => (
             <div
               key={message._id}
-              className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
+              className={`chat ${
+                 message.senderId === authUser._id ? "chat-end" : "chat-start"
+              }`}
               ref={messageEndRef}
             >
               <div className="chat-image avatar">
@@ -88,9 +92,7 @@ const ChatContainer = () => {
               </div>
             </div>
           ))
-        ) : (
-          <p className="text-center text-gray-500">No messages yet.</p>
-        )}
+}
       </div>
 
       <MessageInput />

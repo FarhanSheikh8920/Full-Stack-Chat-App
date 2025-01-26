@@ -8,7 +8,7 @@ export const useChatStore = create((set, get) => ({
     selectedUser: null,
     isUserLoarding: false,
     isMessageLoarding: false,
-
+      
     getUsers: async () => {
         set({ isUserLoarding: true });
         try {
@@ -47,28 +47,30 @@ export const useChatStore = create((set, get) => ({
         const { selectedUser } = get();
         if (!selectedUser) return;
       
+        
         const socket = useAuthStore.getState().socket;
-        if (!socket) {
-          console.warn("Socket not initialized");
-          return;
-        }
-      
-        // Remove any existing listener to avoid duplication
-        socket.off("newMessage");
-      
-        // Add a new listener
+        const { authUser } = useAuthStore.getState();
+    
         socket.on("newMessage", (newMessage) => {
-        //  const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
-          if (newMessage.senderId !== selectedUser._id) return;
-      
-          // Safely update the state
-          set((state) => ({
-            messages: [...state.messages, newMessage],
-          }));
+          const { senderId, receiverId } = newMessage;
+
+    // Only accept messages involving the current user and selected user
+    const isRelevantMessage =
+      (senderId === selectedUser._id && receiverId === authUser._id) || // Message sent to the current user
+      (senderId === authUser._id && receiverId === selectedUser._id);   // Message sent by the current user
+
+    if (!isRelevantMessage) {
+      return; // Ignore irrelevant messages
+    }
+
+    
+          set({
+            messages: [...get().messages, newMessage],
+          });
         });
-      },
-      
-        unsubcribeFromMessages: () => {
+      }, 
+    
+      unsubcribeFromMessages: () => {
             const socket= useAuthStore.getState().socket;
             socket.off("newMessage");
         },

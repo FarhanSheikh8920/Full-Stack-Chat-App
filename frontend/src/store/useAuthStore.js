@@ -60,7 +60,8 @@ login : async (data) => {
 
     }
     catch(error){
-        toast.error(error.response.data.message);
+        toast.error("Make Sure Credential are correct");
+       toast.error(error.response.data.message);
     }finally{
         set({isSigningIn: false});
     }

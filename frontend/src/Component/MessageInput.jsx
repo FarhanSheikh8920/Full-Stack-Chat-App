@@ -3,15 +3,13 @@ import { useState, useRef } from 'react';
 import { Image, Send, X } from "lucide-react";
 import { useChatStore } from "../store/useChatStore";
 import { toast } from "react-hot-toast";
-
-
-
+import { useAuthStore } from '../store/useAuthStore';
 const MessageInput = () => {
 const [text,setText]=useState('')
-const [isSending, setIsSending] = useState(false);
 const [imagePreview,setImagePreview]=useState(null)
 const fileInputRef = useRef(null)
-const {sendMessage}=useChatStore();
+const {authUser}=useAuthStore();
+const {sendMessage,selectedUser}=useChatStore();
 const handleImageChange = (e) => {
     const file= e.target.files[0];
     if(!file.type.startsWith('image/')){
@@ -31,25 +29,27 @@ const removeImage = () => {
 
 }
 
+
 const handleSendMessage = async (e) => {
   e.preventDefault();
   if (!text.trim() && !imagePreview) return;
-  setIsSending(true);
+
   try {
     await sendMessage({
       text: text.trim(),
       image: imagePreview,
+      senderId: authUser._id, // Add senderId
+      receiverId: selectedUser._id, // Add receiverId
     });
+
     // Clear form
     setText("");
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   } catch (error) {
     console.error("Failed to send message:", error);
-    toast.error("Failed to send message");
-  } finally {
-    setIsSending(false);
   }
+  
 };
   return( <div className="p-4 w-full">
   {imagePreview && (

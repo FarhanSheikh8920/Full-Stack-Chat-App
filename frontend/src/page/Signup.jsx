@@ -67,7 +67,7 @@ const Signup = () => {
     
     if (isValid === true) {
       signup(formdata)
-      toast.success("Account created successfully")
+   
     }
 
   }
